@@ -3,7 +3,7 @@
 
 #include "common.h"
 
-// PAFS (PekerOS File System) Ayarları
+// PAFS (ScratchOS File System) Ayarları
 #define PAFS_MAGIC       0xAF5
 #define PAFS_BLOCK_SIZE  512
 #define PAFS_MAX_INODES  128

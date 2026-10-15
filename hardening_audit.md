@@ -1,6 +1,6 @@
-# FerkanOS Sistem Güçlendirme Denetimi (Audit)
+# ScratchOS Sistem Güçlendirme Denetimi (Audit)
 
-Bu dosya, FerkanOS çekirdeğindeki (kernel) hataları, performans darboğazlarını ve eksiklikleri belgelemektedir. Tespit edilen sorunlar önem derecesine göre sıralanmıştır.
+Bu dosya, ScratchOS çekirdeğindeki (kernel) hataları, performans darboğazlarını ve eksiklikleri belgelemektedir. Tespit edilen sorunlar önem derecesine göre sıralanmıştır.
 
 ## 🔴 Kritik Sorunlar (Sistem Çökmesine/Veri Kaybına Yol Açabilir)
 

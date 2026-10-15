@@ -146,6 +146,7 @@ void schedule() {
 
 void task_exit() {
     unsigned int flags = irq_save();
+    (void)flags;
     task_t* current = get_current_task();
     if (current && current->id != 1) { // Kernel task (PID 1) kapatılamaz
         current->state = TASK_DEAD;

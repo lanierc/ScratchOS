@@ -15,7 +15,9 @@ enum gui_event_type {
 enum gui_widget_type {
     WIDGET_BUTTON,
     WIDGET_LABEL,
-    WIDGET_TEXTBOX
+    WIDGET_TEXTBOX,
+    WIDGET_MENU,       // New menu widget
+    WIDGET_MENU_ITEM   // Items belonging to a menu
 };
 
 typedef struct gui_widget {
@@ -49,10 +51,29 @@ typedef struct window {
 } window_t;
 
 void gui_init();
+gui_widget_t* gui_create_menu(window_t* win, int x, int y, int w, int h, char* text);
+gui_widget_t* gui_create_menu_item(window_t* win, int x, int y, int w, int h, char* text, void (*on_click)(gui_widget_t*));
 void gui_render();
-void gui_on_mouse_event(int x, int y, int buttons);
+void gui_on_mouse_event(int x, int y, int buttons, int scroll);
+void gui_on_key_event(char c);
 window_t* gui_create_window(char* title, int x, int y, int w, int h, unsigned int color);
 gui_widget_t* gui_create_button(window_t* win, int x, int y, int w, int h, char* text, void (*on_click)(gui_widget_t*));
 gui_widget_t* gui_create_label(window_t* win, int x, int y, char* text, unsigned int color);
+
+void gui_term_init(window_t *win);
+void gui_term_put_char(char c);
+void gui_term_put_str(const char *str);
+void gui_term_scroll(int delta);
+
+void gui_fm_init(window_t *win);
+void gui_fm_open_path(const char *path);
+void gui_fm_on_click(int rel_x, int rel_y);
+void gui_fm_scroll(int delta);
+
+void gui_notepad_init(window_t *win, const char *filepath);
+void gui_notepad_on_key(char c);
+void gui_notepad_on_click(int rel_x, int rel_y);
+void gui_notepad_save(void);
+void gui_notepad_clear(void);
 
 #endif

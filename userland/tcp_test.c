@@ -70,7 +70,7 @@ int main() {
     }
 
     print("Baglanti Basarili! Mesaj gonderiliyor...\n");
-    char *msg = "Merhaba Host! Ben FerkanOS TCP istemcisi.";
+    char *msg = "Merhaba Host! Ben ScratchOS TCP istemcisi.";
     send(sock, msg, 42, 0);
 
     print("Cevap bekleniyor...\n");

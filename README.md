@@ -1,6 +1,6 @@
-# PekerOS (FerkanOS) İşletim Sistemi
+# ScratchOS İşletim Sistemi
 
-FerkanOS, x86 mimarisi üzerinde çalışan, eğitim ve araştırma odaklı geliştirilmiş monolitik bir işletim sistemi çekirdeğidir. Projenin temel amacı, donanım seviyesinden kullanıcı uygulamalarına kadar modern bir işletim sisteminin tüm bileşenlerini sıfırdan inşa ederek düşük seviyeli sistem mimarilerini analiz etmektir.
+ScratchOS, x86 mimarisi üzerinde çalışan, eğitim ve araştırma odaklı geliştirilmiş monolitik bir işletim sistemi çekirdeğidir. Projenin temel amacı, donanım seviyesinden kullanıcı uygulamalarına kadar modern bir işletim sisteminin tüm bileşenlerini sıfırdan inşa ederek düşük seviyeli sistem mimarilerini analiz etmektir.
 
 ## Temel Mimari Bileşenler
 
@@ -16,7 +16,7 @@ FerkanOS, x86 mimarisi üzerinde çalışan, eğitim ve araştırma odaklı geli
 
 ### 3. Sanal Dosya Sistemi (VFS) ve Depolama
 - **VFS Soyutlama Katmanı:** Dosya sistemi bağımsız bir arayüz üzerinden mount noktaları, dosya okuma/yazma ve dizin listeleme desteği.
-- **PAFS (Peker Advanced File System):** İmaj tabanlı, basit ve performans odaklı yerel dosya sistemi.
+- **PAFS (ScratchOS Advanced File System):** İmaj tabanlı, basit ve performans odaklı yerel dosya sistemi.
 - **Ext2 Sürücüsü:** Linux standartlarında Ext2 (Revision 1+) dosya sistemleri için tam okuma ve sembolik bağ (Symlink) çözünürleme desteği.
 - **Depolama Sürücüleri:** ATA IDE kontrolcüsü üzerinden Master/Slave disk yönetimi ve PCI veri yolu üzerinden aygıt keşfi.
 

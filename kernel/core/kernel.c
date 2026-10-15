@@ -19,7 +19,7 @@
 extern vfs_node_t *pafs_get_vfs_root();
 extern void ata_read_sector(unsigned char drive, unsigned int lba, unsigned char *buffer);
 extern void ata_write_sector(unsigned char drive, unsigned int lba, unsigned char *buffer);
-
+extern void vbe_disable();
 // Global değişkenler
 unsigned int terminal_row = 0;
 unsigned int terminal_col = 0;
@@ -73,7 +73,7 @@ void update_cursor() {
 }
 
 void clear_scr() {
-    for (int i = 0; i < 80 * 25 * 2; i += 2) {
+    for (int i = 0; i < 32768; i += 2) {
         video_memory[i] = ' ';
         video_memory[i+1] = 0x07;
     }
@@ -95,11 +95,18 @@ void scroll() {
     }
 }
 
+extern int gui_term_is_redirected();
+extern void gui_term_put_char(char c);
+
 void put_char(char c) {
     // Tüm çıkışları seri porta da gönder (Debug için)
     serial_write(c);
 
     if (vbe_is_active()) {
+        if (gui_term_is_redirected()) {
+            gui_term_put_char(c);
+            return;
+        }
         char buf[2] = {c, 0};
         vbe_write(buf, 0x00FFFFFF);
         return;
@@ -258,22 +265,26 @@ void task2_func() {
 
 void graphics_task() {
     while(1) {
-        mouse_state_t* ms = mouse_get_state();
-        
-        // 1. Tüm GUI bileşenlerini arka tampona çiz (Desktop + Windows + Taskbar)
-        gui_render();
+        if (!vbe_is_active()) {
+            // TUI modundayken bekle ve CPU'yu rahatlat
+            for(int i = 0; i < 50000; i++) asm volatile("nop");
+            continue;
+        }
 
-        // 2. İmleci en üstte çiz
+        mouse_state_t* ms = mouse_get_state();
+        gui_render();
         vbe_draw_cursor_simple(ms->x, ms->y);
-        
-        // 3. Arka tampondaki her şeyi fiziksel ekrana kopyala
         vbe_update();
-        
-        // CPU'yu %100 yormamak için kısa bekleme
         for(int i = 0; i < 10000; i++) asm volatile("nop");
     }
 }
-
+void stop_graphics() {
+    if (!vbe_is_active()) return;
+    
+    vbe_disable();
+    clear_scr();
+    put_str("ScratchOS TUI (Metin) Moduna Donuldu.\n# ");
+}
 
 void user_mode_test() {
     while(1) {
@@ -293,11 +304,15 @@ void udp_test_callback(void *data, int len, unsigned char *src_ip, unsigned shor
     kprintf("[UDP] %d.%d.%d.%d:%d -> '%s'\n", src_ip[0], src_ip[1], src_ip[2], src_ip[3], src_port, buf);
     
     // Echo: Geri ayni port'a gonder!
-    char *reply = "FerkanOS UDP Echo Server: Mesaj alindi!\n";
+    char *reply = "ScratchOS UDP Echo Server: Mesaj alindi!\n";
     net_send_udp(src_ip, src_port, 1234, reply, strlen(reply));
 }
 
+static int graphics_task_started = 0;
+
 void start_graphics(struct multiboot_info* mbi){
+    if (vbe_is_active()) return;
+
     vbe_init(mbi);
     
     if (!vbe_is_active()) {
@@ -307,14 +322,12 @@ void start_graphics(struct multiboot_info* mbi){
 
     // GUI Sistemini başlat
     gui_init();
-    
-    // Masaüstünde test pencereleri oluştur (Faz 10 Testleri)
-    gui_create_window("Sistem Bilgisi", 50, 50, 300, 200, 0x003498DB); // Mavi
-    gui_create_window("Dosya Yoneticisi", 150, 100, 400, 300, 0x002ECC71); // Yesil
-    gui_create_window("Terminal", 250, 200, 400, 250, 0x00000000); // Siyah
-    
     mouse_init();
-    create_task("graphics", graphics_task, 0);
+    
+    if (!graphics_task_started) {
+        create_task("graphics", graphics_task, 0);
+        graphics_task_started = 1;
+    }
 }
 
 // Kernel Giriş Noktası
@@ -345,7 +358,7 @@ void kernel_main(unsigned int magic, struct multiboot_info* mbi) {
     
     // 0. Seri Portu Başlat (En önce!)
     init_serial();
-    serial_print("\n--- PekerOS Kernel Log Started ---\n");
+    serial_print("\n--- ScratchOS Kernel Log Started ---\n");
 
     // 1. GDT ve IDT'yi kur
     init_gdt();
@@ -357,7 +370,7 @@ void kernel_main(unsigned int magic, struct multiboot_info* mbi) {
     // 3. Ekranı temizle ve karşılama mesajı göster
     put_str("\n\n");
     put_str("========================================\n");
-    put_str("         PekerOS v0.2 - Kernel\n");
+    put_str("         ScratchOS v0.2 - Kernel\n");
     put_str("========================================\n\n");
 
     if (magic != MULTIBOOT_MAGIC) {
@@ -473,7 +486,7 @@ void kernel_main(unsigned int magic, struct multiboot_info* mbi) {
 
     put_str("\n--- SISTEM HAZIR ---\n");
     put_str("========================================\n");
-    put_str("         PekerOS v0.2 - Kernel\n");
+    put_str("         ScratchOS v0.2 - Kernel\n");
     put_str("========================================\n\n");
     init_shell();
     

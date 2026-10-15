@@ -6,7 +6,7 @@ BLUE='\033[0;34m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}PekerOS Git Push Scripti${NC}"
+echo -e "${BLUE}ScratchOS Git Push Scripti${NC}"
 echo "--------------------------"
 
 # Commit mesajı kontrolü

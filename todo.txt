@@ -1,4 +1,4 @@
-# PekerOS Geliştirme Yol Haritası
+# ScratchOS Geliştirme Yol Haritası
 
 ## 🟢 Faz 0: Temel Altyapı (Tamamlandı)
 - [x] GDT (Global Descriptor Table) kurulumu
@@ -122,7 +122,7 @@
 - [/] **UI Kit**
     - [/] Butonlar, Metin etiketleri (Label) eklendi, (Menüler eksik)
     - [*] Font renderlama (TrueType/FreeType portu)
-
+ 
 ---
 ## 🟤 Faz 11: Çevresel Birimler ve Diğerleri
 - [ ] **USB Desteği**

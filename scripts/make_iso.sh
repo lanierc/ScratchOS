@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Dosya yolları
-KERNEL="output/pekeros.bin"
-ISO="output/pekeros.iso"
+KERNEL="output/scratchos.bin"
+ISO="output/scratchos.iso"
 ISODIR="isodir"
 
 # Renkler
@@ -10,7 +10,7 @@ GREEN='\033[0;32m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-echo -e "${GREEN}--- PekerOS ISO Oluşturma Aracı ---${NC}"
+echo -e "${GREEN}--- ScratchOS ISO Oluşturma Aracı ---${NC}"
 
 # 1. Kontroller
 if [ ! -f "$KERNEL" ]; then
@@ -45,8 +45,8 @@ insmod all_video
 set gfxmode=800x600x32
 set gfxpayload=800x600x32
 
-menuentry "PekerOS" {
-    multiboot /boot/pekeros.bin
+menuentry "ScratchOS" {
+    multiboot /boot/scratchos.bin
     boot
 }
 EOF

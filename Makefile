@@ -1,4 +1,4 @@
-# PekerOS Makefile
+# ScratchOS Makefile
 # ==========================================
 
 # Araçlar
@@ -47,7 +47,7 @@ ASM_OBJECTS = $(OUTDIR)/boot.o
 OBJECTS     = $(ASM_OBJECTS) $(C_OBJECTS)
 
 # Hedef
-KERNEL      = $(OUTDIR)/pekeros.bin
+KERNEL      = $(OUTDIR)/scratchos.bin
 DISK        = $(OUTDIR)/disk.img
 
 # ==========================================

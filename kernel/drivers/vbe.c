@@ -9,10 +9,15 @@
 #define VBE_DISPI_INDEX_XRES   0x1
 #define VBE_DISPI_INDEX_YRES   0x2
 #define VBE_DISPI_INDEX_BPP    0x3
-#define VBE_DISPI_INDEX_ENABLE 0x4
-#define VBE_DISPI_DISABLED     0x00
-#define VBE_DISPI_ENABLED      0x01
-#define VBE_DISPI_LFB_ENABLED  0x40
+#define VBE_DISPI_INDEX_ENABLE   0x4
+#define VBE_DISPI_INDEX_BANK     0x5
+#define VBE_DISPI_INDEX_VIRT_W   0x6
+#define VBE_DISPI_INDEX_VIRT_H   0x7
+#define VBE_DISPI_INDEX_X_OFFSET 0x8
+#define VBE_DISPI_INDEX_Y_OFFSET 0x9
+#define VBE_DISPI_DISABLED       0x00
+#define VBE_DISPI_ENABLED        0x01
+#define VBE_DISPI_LFB_ENABLED    0x40
 
 extern unsigned char font8x16[256][16];
 #define VBE_VIRT_ADDR 0xE0000000
@@ -117,7 +122,27 @@ void vbe_put_pixel(int x, int y, unsigned int color) {
     if (x < 0 || x >= vbe_info.width || y < 0 || y >= vbe_info.height || !back_buffer) return;
     back_buffer[y * vbe_info.width + x] = color;
 }
+void vbe_disable() {
+    bga_write(VBE_DISPI_INDEX_ENABLE, VBE_DISPI_DISABLED);
+    bga_write(VBE_DISPI_INDEX_X_OFFSET, 0);
+    bga_write(VBE_DISPI_INDEX_Y_OFFSET, 0);
+    bga_write(VBE_DISPI_INDEX_XRES, 640);
+    bga_write(VBE_DISPI_INDEX_YRES, 400);
+    bga_write(VBE_DISPI_INDEX_BPP, 4);
 
+    // CRTC Reset: Standart 80x25 Text Modu (80 sütun = 40 word offset)
+    outb(0x3D4, 0x0C); outb(0x3D5, 0x00); // Start Address High = 0
+    outb(0x3D4, 0x0D); outb(0x3D5, 0x00); // Start Address Low = 0
+    outb(0x3D4, 0x13); outb(0x3D5, 0x28); // Offset (Stride): 40 words = 80 chars per line!
+    outb(0x3D4, 0x14); outb(0x3D5, 0x00); // Underline / Byte mode
+    outb(0x3D4, 0x17); outb(0x3D5, 0xA3); // Mode Control: standard text timing
+
+    // Graphics Controller Miscellaneous Register: Belleği 0xB8000'a (32KB) haritala
+    outb(0x3CE, 0x06);
+    outb(0x3CF, 0x0E);
+
+    vbe_set_active(0);
+}
 unsigned int vbe_get_pixel(int x, int y) {
     if (x < 0 || x >= vbe_info.width || y < 0 || y >= vbe_info.height) return 0;
     return back_buffer[y * vbe_info.width + x];

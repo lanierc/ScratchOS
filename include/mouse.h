@@ -13,6 +13,7 @@ typedef struct {
     unsigned char buttons;
     int x;
     int y;
+    int scroll; // Tekerlek dikey hareketi (+1: yukari, -1: asagi)
 } mouse_state_t;
 
 // Fonksiyonlar

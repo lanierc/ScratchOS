@@ -37,4 +37,4 @@ else
 fi
 
 rm hello.o guess.o syscalls.o vi.o udp_test.o tcp_test.o multi_tcp_test.o
-echo "Bitti! Simdi FerkanOS'u baslatip 'exec udp_test' yazabilirsiniz."
+echo "Bitti! Simdi ScratchOS'u baslatip 'exec udp_test' yazabilirsiniz."

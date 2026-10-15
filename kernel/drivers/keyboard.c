@@ -11,8 +11,13 @@ static unsigned char kbd_buffer[KBD_BUF_SIZE];
 static int kbd_buf_head = 0;
 static int kbd_buf_tail = 0;
 
+extern int vbe_is_active();
+extern void gui_on_key_event(char c);
+
 void keyboard_put(unsigned char c) {
-    if (shell_active) {
+    if (vbe_is_active()) {
+        gui_on_key_event(c);
+    } else if (shell_active) {
         shell_input(c);
     } else {
         kbd_buffer[kbd_buf_head] = c;
@@ -64,10 +69,18 @@ void keyboard_handler(struct registers *r) {
 
     // Yön tuşları
     if (scancode == 0x48) { // Yukarı ok
+        if (vbe_is_active()) {
+            gui_on_key_event('\x11');
+            return;
+        }
         shell_input('\x11');
         return;
     }
     if (scancode == 0x50) { // Aşağı ok
+        if (vbe_is_active()) {
+            gui_on_key_event('\x12');
+            return;
+        }
         shell_input('\x12');
         return;
     }

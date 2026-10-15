@@ -13,7 +13,7 @@ int strlen(const char *s) {
 }
 
 void main() {
-    char *msg = "Merhaba PekerOS (POSIX Syscall ile)!\n";
+    char *msg = "Merhaba ScratchOS (POSIX Syscall ile)!\n";
     _write(1, msg, strlen(msg));
     
     char *mem = (char *)_sbrk(4096);

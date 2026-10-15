@@ -14,6 +14,7 @@
 #include "multiboot.h"
 #include "vfs.h"
 
+extern void stop_graphics();
 extern struct multiboot_info* global_mbi;
 extern void start_graphics(struct multiboot_info* mbi);
 extern int elf_load(vfs_node_t *base, const char *filename);
@@ -95,6 +96,7 @@ void execute_command(char* cmd) {
         put_str("  vinit    - Gorsel modunu baslat\n");
         put_str("  format   - Diski bicimlendir (SIFIRLA)\n");
         put_str("  reboot   - Sistemi yeniden baslat\n");
+        put_str("  shutdown   - Sistemi kapat\n");
     } 
     else if (strcmp(cmd, "clear") == 0) {
         clear_scr();
@@ -103,7 +105,7 @@ void execute_command(char* cmd) {
         terminal_col = 0;
     } 
     else if (strcmp(cmd, "version") == 0) {
-        put_str("PekerOS v0.2 - Shell: fash v0.1\n");
+        put_str("ScratchOS v0.2 - Shell: fash v0.1\n");
     }
     else if (strcmp(cmd, "uptime") == 0) {
         unsigned int total_secs = timer_get_seconds();
@@ -169,8 +171,20 @@ void execute_command(char* cmd) {
         put_str("\n");
     }
     else if (strcmp(cmd, "vinit") == 0){
-        put_str("Gorsel mod baslatiliyor...\n");
-        start_graphics(global_mbi);
+        if(vbe_is_active()){
+            put_str("Gorsel mod zaten Aktif!\n");
+        }
+        else{
+            put_str("Gorsel mod baslatiliyor...\n");
+            start_graphics(global_mbi);
+        }
+    }
+    else if (strcmp(cmd, "tui") == 0 || strcmp(cmd, "exit_gui") == 0) {
+        if (!vbe_is_active()) {
+            put_str("Zaten TUI (metin) modundasiniz.\n");
+        } else {
+            stop_graphics();
+        }
     }
     else if (strncmp(cmd, "ls", 2) == 0) {
         char *path = ".";
@@ -322,6 +336,10 @@ void execute_command(char* cmd) {
         put_str("Sistem yeniden baslatiliyor...\n");
         // Klavye kontrolcüsü üzerinden reset (8042 port 0x64)
         outb(0x64, 0xFE);
+    }
+    else if (strcmp(cmd, "shutdown") == 0){
+        put_str("Sistem Kapatılıyor...\n");
+        outw(0x604, 0x2000);
     }
     else if (strcmp(cmd, "beep") == 0) {
         put_str("AC97 Ses Testi (Bip) baslatiliyor...\n");

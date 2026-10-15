@@ -2,7 +2,7 @@
 #define SPINLOCK_H
 
 /**
- * FerkanOS Spinlock & Interrupt Control
+ * ScratchOS Spinlock & Interrupt Control
  * 
  * Şu an için tek çekirdekli sistemlerde yarış durumlarını önlemek için 
  * kesmeleri (interrupts) kapatıp açma yöntemini kullanıyoruz.
