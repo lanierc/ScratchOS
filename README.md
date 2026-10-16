@@ -279,5 +279,5 @@ ScratchOS/
 Bu proje [MIT Lisansı](LICENSE) kapsamında açık kaynak olarak yayımlanmaktadır.
 
 **Geliştirici:** Muhammed Yasir PEKER  
-*Sistem Mühendisi & İşletim Sistemi Geliştiricisi*  
+*Low Level Programmer*
 İletişim & Katkı: Projeye yönelik hata bildirimleri ve geliştirmeler için GitHub Issues sekmesini kullanabilirsiniz.
