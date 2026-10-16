@@ -66,6 +66,6 @@ make run
 
 ## Geliştirici Bilgileri
 **Muhammed Yasir PEKER**
-*Sistem Mühendisi ve İşletim Sistemi Meraklısı*
+*Low Level Programmer*
 
-Bu proje, akademik bir merak ve düşük seviyeli mühendislik disipliniyle geliştirilmeye devam etmektedir. Tüm hakları saklıdır.
+Bu proje, tek kişilik bir ekip tarafından düzenli olmayan bir şekilde geliştirilmektedir. Tüm hakları saklıdır.
