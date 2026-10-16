@@ -1,4 +1,4 @@
-# ScratchOS İşletim Sistemi
+# Scratch İşletim Sistemi
 
 ScratchOS, x86 mimarisi üzerinde çalışan, eğitim ve araştırma odaklı geliştirilmiş monolitik bir işletim sistemi çekirdeğidir. Projenin temel amacı, donanım seviyesinden kullanıcı uygulamalarına kadar modern bir işletim sisteminin tüm bileşenlerini sıfırdan inşa ederek düşük seviyeli sistem mimarilerini analiz etmektir.
 
