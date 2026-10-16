@@ -105,7 +105,7 @@ void execute_command(char* cmd) {
         terminal_col = 0;
     } 
     else if (strcmp(cmd, "version") == 0) {
-        put_str("FerkanOS (PekerOS) v0.2 - Shell: lash v0.1\n");
+        put_str("ScratchOS v0.2 - Shell: lash v0.1\n");
     }
     else if (strcmp(cmd, "uptime") == 0) {
         unsigned int total_secs = timer_get_seconds();

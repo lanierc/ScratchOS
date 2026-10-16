@@ -1,11 +1,11 @@
-# FerkanOS (ScratchOS)
+# ScratchOS
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Architecture: x86-32](https://img.shields.io/badge/Architecture-x86--32-blue.svg)](#temel-mimari-özellikleri)
 [![Kernel: Monolithic](https://img.shields.io/badge/Kernel-Monolithic-red.svg)](#temel-mimari-özellikleri)
 [![Build: Make](https://img.shields.io/badge/Build-GNU%20Make-brightgreen.svg)](#derleme-ve-kurulum)
 
-**FerkanOS**, x86 (IA-32) mimarisi üzerinde çalışan; donanım seviyesinden kullanıcı modu (Ring 3) uygulamalarına kadar tüm alt bileşenleri sıfırdan geliştirilmiş **monolitik (monolithic) bir işletim sistemi çekirdeğidir**.
+**ScratchOS**, x86 (IA-32) mimarisi üzerinde çalışan; donanım seviyesinden kullanıcı modu (Ring 3) uygulamalarına kadar tüm alt bileşenleri sıfırdan geliştirilmiş **monolitik (monolithic) bir işletim sistemi çekirdeğidir**.
 
 Proje; önyükleme mekanizmalarından sanal bellek yönetimine, aygıt sürücülerinden preemptive multitasking zamanlayıcıya, VFS dosya sistemlerinden tam yığın TCP/IP ağ protokolüne ve grafik arayüze (GUI) kadar modern işletim sistemi tasarım prensiplerini pratik ve optimize edilmiş bir mimariyle sunar.
 
@@ -127,7 +127,7 @@ Proje; önyükleme mekanizmalarından sanal bellek yönetimine, aygıt sürücü
 
 ## Kullanıcı Alanı (Userland) ve ELF Desteği
 
-FerkanOS, bağımsız olarak derlenen C programlarını kullanıcı modunda (Ring 3) çalıştırabilir. `userland/` dizini altında kendi bağımsız `syscalls.c` kütüphanesini ve `user.ld` linker betiğini barındırır.
+ScratchOS, bağımsız olarak derlenen C programlarını kullanıcı modunda (Ring 3) çalıştırabilir. `userland/` dizini altında kendi bağımsız `syscalls.c` kütüphanesini ve `user.ld` linker betiğini barındırır.
 
 Örnek Uygulamalar:
 * **`hello.elf`:** Standart konsol çıkışı testi.
@@ -231,7 +231,7 @@ Oluşturulan `output/scratchos.iso` dosyası; Rufus, BalenaEtcher veya `dd` kull
 ## Proje Dizin Yapısı
 
 ```
-FerkanOS/
+ScratchOS/
 ├── boot/                      # Önyükleme katmanı
 │   └── boot.s                 # Multiboot başlığı, GDT/Paging önyükleme montaj kodu
 ├── include/                   # Çekirdek ve sürücü başlık (.h) dosyaları

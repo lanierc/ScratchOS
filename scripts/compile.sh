@@ -4,7 +4,7 @@
 mkdir -p output
 
 # Eski dosyaları temizle
-rm -f output/*.o output/scratchos.bin output/pekeros.bin
+rm -f output/*.o output/scratchos.bin
 
 # Assembly
 nasm -f elf32 boot/boot.s -o output/boot.o
