@@ -1,11 +1,19 @@
-# ScratchOS
+<p align="center">
+  <img src="assets/logo.png" alt="ScratchOS Logo" width="220" />
+</p>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Architecture: x86-32](https://img.shields.io/badge/Architecture-x86--32-blue.svg)](#temel-mimari-özellikleri)
-[![Kernel: Monolithic](https://img.shields.io/badge/Kernel-Monolithic-red.svg)](#temel-mimari-özellikleri)
-[![Build: Make](https://img.shields.io/badge/Build-GNU%20Make-brightgreen.svg)](#derleme-ve-kurulum)
+<h1 align="center">ScratchOS</h1>
 
-**ScratchOS**, x86 (IA-32) mimarisi üzerinde çalışan; donanım seviyesinden kullanıcı modu (Ring 3) uygulamalarına kadar tüm alt bileşenleri sıfırdan geliştirilmiş **monolitik (monolithic) bir işletim sistemi çekirdeğidir**.
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
+  <a href="#temel-mimari-özellikleri"><img src="https://img.shields.io/badge/Architecture-x86--32-blue.svg" alt="Architecture: x86-32" /></a>
+  <a href="#temel-mimari-özellikleri"><img src="https://img.shields.io/badge/Kernel-Monolithic-red.svg" alt="Kernel: Monolithic" /></a>
+  <a href="#derleme-ve-kurulum"><img src="https://img.shields.io/badge/Build-GNU%20Make-brightgreen.svg" alt="Build: Make" /></a>
+</p>
+
+<p align="center">
+  <strong>ScratchOS</strong>, x86 (IA-32) mimarisi üzerinde çalışan; donanım seviyesinden kullanıcı modu (Ring 3) uygulamalarına kadar tüm alt bileşenleri sıfırdan geliştirilmiş <strong>monolitik (monolithic) bir işletim sistemi çekirdeğidir</strong>.
+</p>
 
 Proje; önyükleme mekanizmalarından sanal bellek yönetimine, aygıt sürücülerinden preemptive multitasking zamanlayıcıya, VFS dosya sistemlerinden tam yığın TCP/IP ağ protokolüne ve grafik arayüze (GUI) kadar modern işletim sistemi tasarım prensiplerini pratik ve optimize edilmiş bir mimariyle sunar.
 
@@ -232,6 +240,8 @@ Oluşturulan `output/scratchos.iso` dosyası; Rufus, BalenaEtcher veya `dd` kull
 
 ```
 ScratchOS/
+├── assets/                    # Proje görsel ve logoları
+│   └── logo.png               # ScratchOS resmi logosu
 ├── boot/                      # Önyükleme katmanı
 │   └── boot.s                 # Multiboot başlığı, GDT/Paging önyükleme montaj kodu
 ├── include/                   # Çekirdek ve sürücü başlık (.h) dosyaları
