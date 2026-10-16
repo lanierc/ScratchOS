@@ -4,7 +4,7 @@
 #include "pmm.h"
 #include "paging.h"
 #include "kheap.h"
-#include "pafs.h"
+#include "lafs.h"
 #include "task.h"
 #include "tss.h"
 #include "syscall.h"
@@ -56,7 +56,7 @@ static int atoi(const char *s) {
 }
 
 void print_prompt() {
-    put_str("fash ");
+    put_str("lash ");
     put_str(shell_cwd_path);
     put_str("> ");
 }
@@ -105,7 +105,7 @@ void execute_command(char* cmd) {
         terminal_col = 0;
     } 
     else if (strcmp(cmd, "version") == 0) {
-        put_str("ScratchOS v0.2 - Shell: fash v0.1\n");
+        put_str("FerkanOS (PekerOS) v0.2 - Shell: lash v0.1\n");
     }
     else if (strcmp(cmd, "uptime") == 0) {
         unsigned int total_secs = timer_get_seconds();
@@ -218,7 +218,7 @@ void execute_command(char* cmd) {
     }
     else if (strncmp(cmd, "mkdir ", 6) == 0) {
         char *dirname = cmd + 6;
-        if (pafs_mkdir(shell_cwd_node->inode, dirname) != -1) {
+        if (lafs_mkdir(shell_cwd_node->inode, dirname) != -1) {
             put_str("Dizin olusturuldu.\n");
         } else {
             put_str("Hata: Dizin olusturulamadi.\n");
@@ -229,7 +229,7 @@ void execute_command(char* cmd) {
         if (strlen(filename) == 0) {
             put_str("Kullanim: touch <dosya_adi>\n");
         } else {
-            int ino = pafs_create(shell_cwd_node->inode, filename, 0);
+            int ino = lafs_create(shell_cwd_node->inode, filename, 0);
             if (ino != -1) {
                 put_str("Dosya olusturuldu: "); put_str(filename); put_str("\n");
             } else {
@@ -315,7 +315,7 @@ void execute_command(char* cmd) {
     }
     else if (strncmp(cmd, "rm ", 3) == 0) {
         char *filename = cmd + 3;
-        if (pafs_delete(shell_cwd_node->inode, filename) == 0) {
+        if (lafs_delete(shell_cwd_node->inode, filename) == 0) {
             put_str("Dosya silindi.\n");
         } else {
             put_str("Hata: Dosya silinemedi.\n");
@@ -323,7 +323,7 @@ void execute_command(char* cmd) {
     }
     else if (strncmp(cmd, "rmdir ", 6) == 0) {
         char *dirname = cmd + 6;
-        int res = pafs_delete(shell_cwd_node->inode, dirname);
+        int res = lafs_delete(shell_cwd_node->inode, dirname);
         if (res == 0) {
             put_str("Dizin silindi.\n");
         } else if (res == -2) {
@@ -355,8 +355,8 @@ void execute_command(char* cmd) {
         put_str("Ses DMA'ya gonderildi.\n");
     }
     else if (strcmp(cmd, "format") == 0) {
-        put_str("PAFS bicimlendiriliyor...\n");
-        pafs_format();
+        put_str("LAFS bicimlendiriliyor...\n");
+        lafs_format();
         put_str("Disk temizlendi. Lutfen 'reboot' yaparak sistemi yenileyin.\n");
     }
     else {

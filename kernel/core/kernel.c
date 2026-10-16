@@ -4,7 +4,7 @@
 #include "pmm.h"
 #include "paging.h"
 #include "kheap.h"
-#include "pafs.h"
+#include "lafs.h"
 #include "task.h"
 #include "tss.h"
 #include "syscall.h"
@@ -16,7 +16,7 @@
 #include "serial.h"
 #include "net.h"
 
-extern vfs_node_t *pafs_get_vfs_root();
+extern vfs_node_t *lafs_get_vfs_root();
 extern void ata_read_sector(unsigned char drive, unsigned int lba, unsigned char *buffer);
 extern void ata_write_sector(unsigned char drive, unsigned int lba, unsigned char *buffer);
 extern void vbe_disable();
@@ -406,9 +406,9 @@ void kernel_main(unsigned int magic, struct multiboot_info* mbi) {
     kfree(test_ptr2);
     put_str("[TEST] ptr2 serbest birakildi. Heap temiz.\n");
 
-    put_str("[VFS] PAFS baslatiliyor...\n");
-    pafs_init();
-    put_str("[VFS] PAFS baslatildi.\n");
+    put_str("[VFS] LAFS baslatiliyor...\n");
+    lafs_init();
+    put_str("[VFS] LAFS baslatildi.\n");
     
     put_str("[NET] TCP baslatiliyor...\n");
     tcp_init();
@@ -420,8 +420,8 @@ void kernel_main(unsigned int magic, struct multiboot_info* mbi) {
 
 
     // VFS Başlat
-    vfs_root = pafs_get_vfs_root();
-    put_str("[VFS] Kök dosya sistemi (PAFS) bağlandı.\n");
+    vfs_root = lafs_get_vfs_root();
+    put_str("[VFS] Kök dosya sistemi (LAFS) bağlandı.\n");
 
     // Faz 8: Mount test (VFS_ROOT artik hazir)
     // Önce Drive 1'in (ikinci ATA disk) var olup olmadığını kontrol et
@@ -478,7 +478,7 @@ void kernel_main(unsigned int magic, struct multiboot_info* mbi) {
     put_str("[OK] Klavye surucusu yuklendi.\n");
 
     // 7. Shell'i başlat
-    put_str("[OK] fash shell baslatildi.\n\n");
+    put_str("[OK] lash shell baslatildi.\n\n");
     init_syscalls();
 
     // Grafik gorevini baslat (Shell'den manuel baslatilacak)

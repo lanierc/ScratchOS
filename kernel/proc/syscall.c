@@ -26,8 +26,8 @@ void sys_open(struct registers *regs) {
     vfs_node_t *node = vfs_get_node_by_path(vfs_root, path);
     if (!node) {
         if (flags & 1) { // 1 = O_CREAT
-            extern int pafs_write(const char *name, const char *data, int len);
-            pafs_write(path, "", 0);
+            extern int lafs_write(const char *name, const char *data, int len);
+            lafs_write(path, "", 0);
             node = vfs_get_node_by_path(vfs_root, path);
             if (!node) {
                 regs->eax = -1;

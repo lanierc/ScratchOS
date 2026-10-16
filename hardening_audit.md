@@ -5,16 +5,16 @@ Bu dosya, ScratchOS çekirdeğindeki (kernel) hataları, performans darboğazlar
 ## 🔴 Kritik Sorunlar (Sistem Çökmesine/Veri Kaybına Yol Açabilir)
 
 1.  **Bellek ve Disk Erişiminde Yarış Durumu (Race Condition):**
-    - `kmalloc`, `kfree`, `pafs_write`, `pafs_read` gibi fonksiyonlarda **kilitleme (locking/mutex)** mekanizması yok.
+    - `kmalloc`, `kfree`, `lafs_write`, `lafs_read` gibi fonksiyonlarda **kilitleme (locking/mutex)** mekanizması yok.
     - Çoklu görev (multitasking) etkinken iki görev aynı anda bellek ayırmaya çalışırsa heap yapısı bozulur ve sistem çöker (Triple Fault).
     - Aynı durum disk işlemleri için de geçerlidir; ATA kontrolcüsü aynı anda iki isteği işleyemez.
 
 2.  **VFS Katmanında Bellek Sızıntısı (Memory Leak):**
-    - `pafs_vfs_finddir` fonksiyonu her çağrıldığında `kmalloc` ile yeni bir `vfs_node_t` oluşturuyor ancak bu düğümler (node) hiçbir zaman serbest bırakılmıyor (`kfree` çağrılmıyor).
+    - `lafs_vfs_finddir` fonksiyonu her çağrıldığında `kmalloc` ile yeni bir `vfs_node_t` oluşturuyor ancak bu düğümler (node) hiçbir zaman serbest bırakılmıyor (`kfree` çağrılmıyor).
     - Uzun süreli kullanımda sistem belleği tükenecektir.
 
 3.  **Statik Değişken Kullanımı (Thread-Safety):**
-    - `pafs.c` içindeki `static struct vfs_dirent dirent` yapısı tüm görevler tarafından ortak kullanılıyor. Bir görev dizin okurken diğeri okursa veriler birbirine karışır.
+    - `lafs.c` içindeki `static struct vfs_dirent dirent` yapısı tüm görevler tarafından ortak kullanılıyor. Bir görev dizin okurken diğeri okursa veriler birbirine karışır.
 
 4.  **`create_task` İçinde Yarış Durumu:**
     - Görev listesine (`task_list`) yeni bir görev eklenirken kesmeler (interrupts) kapatılmıyor. Bu sırada bir zamanlayıcı kesmesi gelirse liste yapısı bozulabilir.

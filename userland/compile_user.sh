@@ -25,13 +25,13 @@ strip bin/*.elf
 
 echo "[3/3] Disk imajina enjekte ediliyor..."
 if [ -f ../output/disk.img ]; then
-    python3 ../scripts/pafs_format.py ../output/disk.img
-    python3 ../scripts/pafs_tool.py ../output/disk.img bin/hello.elf hello
-    python3 ../scripts/pafs_tool.py ../output/disk.img bin/guess.elf guess
-    python3 ../scripts/pafs_tool.py ../output/disk.img bin/vi.elf vi
-    python3 ../scripts/pafs_tool.py ../output/disk.img bin/udp_test.elf udp_test
-    python3 ../scripts/pafs_tool.py ../output/disk.img bin/tcp_test.elf tcp_test
-    python3 ../scripts/pafs_tool.py ../output/disk.img bin/multi_tcp_test.elf multi_tcp_test
+    python3 ../scripts/lafs_format.py ../output/disk.img
+    python3 ../scripts/lafs_tool.py ../output/disk.img bin/hello.elf hello
+    python3 ../scripts/lafs_tool.py ../output/disk.img bin/guess.elf guess
+    python3 ../scripts/lafs_tool.py ../output/disk.img bin/vi.elf vi
+    python3 ../scripts/lafs_tool.py ../output/disk.img bin/udp_test.elf udp_test
+    python3 ../scripts/lafs_tool.py ../output/disk.img bin/tcp_test.elf tcp_test
+    python3 ../scripts/lafs_tool.py ../output/disk.img bin/multi_tcp_test.elf multi_tcp_test
 else
     echo "Hata: ../output/disk.img bulunamadı! Önce kernel'i derleyin."
 fi

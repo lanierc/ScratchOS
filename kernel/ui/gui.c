@@ -2,7 +2,7 @@
 #include "common.h"
 #include "kheap.h"
 #include "vfs.h"
-#include "pafs.h"
+#include "lafs.h"
 
 static void test_btn_click(gui_widget_t* btn);
 
@@ -100,7 +100,7 @@ void gui_term_init(window_t *win) {
     gui_term_put_str("ScratchOS v0.2 Grafiksel Terminal\n");
     gui_term_put_str("Yardim icin 'help' yazabilirsiniz.\n");
     gui_term_put_str("----------------------------------------\n");
-    gui_term_put_str("fash /> ");
+    gui_term_put_str("lash /> ");
 }
 
 void gui_term_scroll(int delta) {
@@ -157,7 +157,7 @@ void gui_on_key_event(char c) {
             
             term_input_len = 0;
             term_input[0] = '\0';
-            gui_term_put_str("fash /> ");
+            gui_term_put_str("lash /> ");
         } else if (c == '\b') {
             if (term_input_len > 0) {
                 term_input_len--;

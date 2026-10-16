@@ -8,7 +8,7 @@
 - [x] Klavye Sürücüsü (Türkçe Q desteği)
 - [x] PIT (Programmable Interval Timer) - 100Hz
 - [x] VGA Metin Modu Sürücüsü (Kaydırma, Renk desteği)
-- [x] Temel Shell (fash v0.1)
+- [x] Temel Shell (lash v0.1)
 
 ---
 
@@ -29,8 +29,8 @@
 ## 🟢 Faz 2: Depolama ve Dosya Sistemi (Tamamlandı)
 - [x] **ATA/IDE Sürücüsü**
     - [x] LBA 28/48 bit modunda disk okuma/yazma desteği
-- [x] **Dosya Sistemi (PAFS)**
-    - [x] Özel PAFS mimarisinin tasarımı (Superblock, Inode, Block)
+- [x] **Dosya Sistemi (LAFS)**
+    - [x] Özel LAFS mimarisinin tasarımı (Superblock, Inode, Block)
     - [x] RAM tabanlı Sanal Disk implementasyonu
     - [x] Dosya oluşturma, okuma, yazma
 - [x] **Shell Geliştirmeleri**

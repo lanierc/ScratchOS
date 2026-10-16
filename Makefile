@@ -22,7 +22,7 @@ CORE_SRC    = kernel/core/kernel.c kernel/core/gdt.c kernel/core/idt.c \
 
 MM_SRC      = kernel/mm/pmm.c kernel/mm/paging.c kernel/mm/kheap.c
 
-FS_SRC      = kernel/fs/pafs.c kernel/fs/vfs.c kernel/fs/ext2.c
+FS_SRC      = kernel/fs/lafs.c kernel/fs/vfs.c kernel/fs/ext2.c
 
 DRIVER_SRC  = kernel/drivers/ata.c kernel/drivers/keyboard.c kernel/drivers/mouse.c \
               kernel/drivers/timer.c kernel/drivers/pci.c kernel/drivers/vbe.c \
@@ -79,7 +79,7 @@ $(KERNEL): $(OBJECTS)
 		$(OUTDIR)/core/kernel.o $(OUTDIR)/core/gdt.o $(OUTDIR)/core/idt.o \
 		$(OUTDIR)/core/irq.o $(OUTDIR)/core/panic.o $(OUTDIR)/core/serial.o \
 		$(OUTDIR)/mm/pmm.o $(OUTDIR)/mm/paging.o $(OUTDIR)/mm/kheap.o \
-		$(OUTDIR)/fs/pafs.o $(OUTDIR)/fs/vfs.o $(OUTDIR)/fs/ext2.o \
+		$(OUTDIR)/fs/lafs.o $(OUTDIR)/fs/vfs.o $(OUTDIR)/fs/ext2.o \
 		$(OUTDIR)/drivers/ata.o $(OUTDIR)/drivers/keyboard.o $(OUTDIR)/drivers/mouse.o \
 		$(OUTDIR)/drivers/timer.o $(OUTDIR)/drivers/pci.o $(OUTDIR)/drivers/vbe.o \
 		$(OUTDIR)/drivers/font.o $(OUTDIR)/drivers/rtl8139.o $(OUTDIR)/drivers/e1000.o \

@@ -26,7 +26,7 @@ gcc $CFLAGS -c kernel/mm/paging.c    -o output/paging.o
 gcc $CFLAGS -c kernel/mm/kheap.c     -o output/kheap.o
 
 # --- Filesystem ---
-gcc $CFLAGS -c kernel/fs/pafs.c      -o output/pafs.o
+gcc $CFLAGS -c kernel/fs/lafs.c      -o output/lafs.o
 gcc $CFLAGS -c kernel/fs/vfs.c       -o output/vfs.o
 gcc $CFLAGS -c kernel/fs/ext2.c      -o output/ext2.o
 
@@ -62,7 +62,7 @@ ld -m elf_i386 -T linker.ld -o output/scratchos.bin \
     output/boot.o output/kernel.o output/gdt.o output/idt.o output/irq.o \
     output/panic.o output/serial.o \
     output/pmm.o output/paging.o output/kheap.o \
-    output/pafs.o output/vfs.o output/ext2.o \
+    output/lafs.o output/vfs.o output/ext2.o \
     output/ata.o output/keyboard.o output/mouse.o output/timer.o \
     output/pci.o output/vbe.o output/font.o output/rtl8139.o output/e1000.o \
     output/ac97.o \
