@@ -3,6 +3,9 @@
 #include "kheap.h"
 #include "vfs.h"
 #include "lafs.h"
+#include "pmm.h"
+#include "timer.h"
+#include "net.h"
 
 static void test_btn_click(gui_widget_t* btn);
 
@@ -11,6 +14,11 @@ static window_t *window_list_tail = 0;
 //Window Create Variables
 static int window_offset = 0;
 static int cascade_dir = 1;
+
+static int start_menu_open = 0;
+static window_t *sysinfo_window = 0;
+static window_t *net_window = 0;
+static window_t *calc_window = 0;
 
 /* ==================== GRAFIKSEL TERMINAL TAMPONU ==================== */
 #define TERM_MAX_LINES 128
@@ -491,6 +499,15 @@ void gui_destroy_window(window_t *win) {
     if (win == notepad_window) {
         notepad_window = 0;
     }
+    if (win == sysinfo_window) {
+        sysinfo_window = 0;
+    }
+    if (win == net_window) {
+        net_window = 0;
+    }
+    if (win == calc_window) {
+        calc_window = 0;
+    }
 
     // Listeden cikar
     if (win->prev) win->prev->next = win->next;
@@ -515,6 +532,154 @@ void gui_bring_to_front(window_t *win) {
     if (window_list_tail) window_list_tail->next = win;
     window_list_tail = win;
     if (!window_list_head) window_list_head = win;
+}
+
+void gui_minimize_window(window_t *win) {
+    if (!win) return;
+    win->minimized = 1;
+}
+
+void gui_restore_window(window_t *win) {
+    if (!win) return;
+    win->minimized = 0;
+    gui_bring_to_front(win);
+}
+
+void gui_toggle_start_menu(void) {
+    start_menu_open = !start_menu_open;
+}
+
+/* ==================== SISTEM BILGISI (SYSINFO) ==================== */
+void gui_sysinfo_init(window_t *win) {
+    sysinfo_window = win;
+}
+
+/* ==================== AG DURUMU (NETWORK) ==================== */
+void gui_net_init(window_t *win) {
+    net_window = win;
+}
+
+/* ==================== HESAP MAKINESI (CALCULATOR) ==================== */
+static char calc_display[32] = "0";
+static int calc_operand1 = 0;
+static char calc_op = 0;
+static int calc_clear_on_next = 0;
+
+void gui_calc_init(window_t *win) {
+    calc_window = win;
+    strcpy(calc_display, "0");
+    calc_operand1 = 0;
+    calc_op = 0;
+    calc_clear_on_next = 0;
+}
+
+static void calc_int_to_str(int val, char *buf) {
+    if (val == 0) {
+        strcpy(buf, "0");
+        return;
+    }
+    int is_neg = 0;
+    unsigned int uval;
+    if (val < 0) {
+        is_neg = 1;
+        uval = (unsigned int)(-val);
+    } else {
+        uval = (unsigned int)val;
+    }
+    char tmp[16];
+    int idx = 0;
+    while (uval > 0) {
+        tmp[idx++] = (uval % 10) + '0';
+        uval /= 10;
+    }
+    int out = 0;
+    if (is_neg) buf[out++] = '-';
+    for (int i = idx - 1; i >= 0; i--) {
+        buf[out++] = tmp[i];
+    }
+    buf[out] = '\0';
+}
+
+static int calc_str_to_int(const char *buf) {
+    int res = 0;
+    int sign = 1;
+    if (*buf == '-') {
+        sign = -1;
+        buf++;
+    }
+    while (*buf >= '0' && *buf <= '9') {
+        res = res * 10 + (*buf - '0');
+        buf++;
+    }
+    return res * sign;
+}
+
+void gui_calc_on_click(int rel_x, int rel_y) {
+    // Hesap makinesi boyutu: 240x280
+    // Ekran alani: rel_y: 35-70
+    // Butonlar gridi: rel_y: 80-260, rel_x: 10-230
+    if (rel_y < 80 || rel_y >= 260 || rel_x < 10 || rel_x >= 230) return;
+
+    int col = (rel_x - 10) / 55; // 4 sutun (genislik ~50px her buton)
+    int row = (rel_y - 80) / 45; // 4 satir (yukseklik ~40px her buton)
+    if (col < 0 || col > 3 || row < 0 || row > 3) return;
+
+    // Grid matrisi:
+    // Row 0: [7] [8] [9] [/]
+    // Row 1: [4] [5] [6] [*]
+    // Row 2: [1] [2] [3] [-]
+    // Row 3: [C] [0] [=] [+]
+    char key = 0;
+    const char grid[4][4] = {
+        {'7', '8', '9', '/'},
+        {'4', '5', '6', '*'},
+        {'1', '2', '3', '-'},
+        {'C', '0', '=', '+'}
+    };
+    key = grid[row][col];
+
+    if (key >= '0' && key <= '9') {
+        if (calc_clear_on_next || strcmp(calc_display, "0") == 0) {
+            calc_display[0] = key;
+            calc_display[1] = '\0';
+            calc_clear_on_next = 0;
+        } else {
+            int len = strlen(calc_display);
+            if (len < 10) {
+                calc_display[len] = key;
+                calc_display[len + 1] = '\0';
+            }
+        }
+    } else if (key == 'C') {
+        strcpy(calc_display, "0");
+        calc_operand1 = 0;
+        calc_op = 0;
+        calc_clear_on_next = 0;
+    } else if (key == '+' || key == '-' || key == '*' || key == '/') {
+        calc_operand1 = calc_str_to_int(calc_display);
+        calc_op = key;
+        calc_clear_on_next = 1;
+    } else if (key == '=') {
+        if (calc_op != 0) {
+            int operand2 = calc_str_to_int(calc_display);
+            int result = 0;
+            if (calc_op == '+') result = calc_operand1 + operand2;
+            else if (calc_op == '-') result = calc_operand1 - operand2;
+            else if (calc_op == '*') result = calc_operand1 * operand2;
+            else if (calc_op == '/') {
+                if (operand2 != 0) result = calc_operand1 / operand2;
+                else {
+                    strcpy(calc_display, "Hata");
+                    calc_op = 0;
+                    calc_clear_on_next = 1;
+                    return;
+                }
+            }
+            calc_int_to_str(result, calc_display);
+            calc_op = 0;
+            calc_clear_on_next = 1;
+        }
+    }
 }
 
 void gui_on_mouse_event(int x, int y, int buttons, int scroll) {
@@ -542,55 +707,184 @@ void gui_on_mouse_event(int x, int y, int buttons, int scroll) {
     int left_release = !(buttons & 1) && (last_buttons & 1);
 
     if (left_click) {
-        // 1. Ikonlara mi tiklandi? (Sol taraf 0-100 arasi)
+        // 1. Başlat Menüsü Açık ise Menü Tıklamalarını Yakala
+        if (start_menu_open) {
+            // Popup menü alanı: x: 4..174, y: 320..568
+            if (x >= 4 && x <= 174 && y >= 320 && y <= 568) {
+                if (y >= 350) {
+                    int item_idx = (y - 350) / 27;
+                    start_menu_open = 0; // Menüyü kapat
+                    if (item_idx == 0) { // Terminal
+                        if (!term_window || !term_window->active) {
+                            term_window = gui_create_window("Terminal", 100, 80, 520, 360, 0x00000000);
+                            gui_term_init(term_window);
+                        } else {
+                            gui_restore_window(term_window);
+                        }
+                    } else if (item_idx == 1) { // Dosya Yoneticisi
+                        if (!fm_window || !fm_window->active) {
+                            fm_window = gui_create_window("Dosya Yoneticisi", 180, 80, 480, 340, 0x003498DB);
+                            gui_fm_init(fm_window);
+                        } else {
+                            gui_restore_window(fm_window);
+                        }
+                    } else if (item_idx == 2) { // Not Defteri
+                        if (!notepad_window || !notepad_window->active) {
+                            notepad_window = gui_create_window("Not Defteri", 220, 100, 480, 360, 0x008E44AD);
+                            gui_notepad_init(notepad_window, "/not.txt");
+                        } else {
+                            gui_restore_window(notepad_window);
+                        }
+                    } else if (item_idx == 3) { // Sistem Bilgisi
+                        if (!sysinfo_window || !sysinfo_window->active) {
+                            sysinfo_window = gui_create_window("Sistem Bilgisi", 200, 120, 420, 260, 0x0016A085);
+                            gui_sysinfo_init(sysinfo_window);
+                        } else {
+                            gui_restore_window(sysinfo_window);
+                        }
+                    } else if (item_idx == 4) { // Ag Durumu
+                        if (!net_window || !net_window->active) {
+                            net_window = gui_create_window("Ag Durumu", 240, 130, 400, 240, 0x002ED573);
+                            gui_net_init(net_window);
+                        } else {
+                            gui_restore_window(net_window);
+                        }
+                    } else if (item_idx == 5) { // Hesap Makinesi
+                        if (!calc_window || !calc_window->active) {
+                            calc_window = gui_create_window("Hesap Makinesi", 260, 100, 240, 290, 0x00E67E22);
+                            gui_calc_init(calc_window);
+                        } else {
+                            gui_restore_window(calc_window);
+                        }
+                    } else if (item_idx == 6) { // Yeniden Baslat
+                        outb(0x64, 0xFE);
+                    } else if (item_idx == 7) { // Sistemi Kapat
+                        outw(0x604, 0x2000);
+                    }
+                }
+                last_buttons = buttons;
+                return;
+            } else if (!(x >= 4 && x <= 99 && y >= 568)) {
+                // Menü dışına tıklandı, menüyü kapat
+                start_menu_open = 0;
+            }
+        }
+
+        // 2. Alt Görev Çubuğuna mı (Taskbar: y >= 568) tıklandı?
+        if (y >= 568) {
+            // [ScratchOS] Başlat Butonu (x: 4..99)
+            if (x >= 4 && x <= 99) {
+                gui_toggle_start_menu();
+                last_buttons = buttons;
+                return;
+            }
+
+            // Sekmelere mi tıklandı? (x: 105..580)
+            int tab_x = 105;
+            window_t *w_tab = window_list_head;
+            while (w_tab && tab_x < 580) {
+                if (w_tab->active) {
+                    if (x >= tab_x && x < tab_x + 105) {
+                        if (w_tab->minimized) {
+                            gui_restore_window(w_tab);
+                        } else if (w_tab == window_list_tail) {
+                            // Zaten en öndeyse minimize et
+                            gui_minimize_window(w_tab);
+                        } else {
+                            gui_bring_to_front(w_tab);
+                        }
+                        last_buttons = buttons;
+                        return;
+                    }
+                    tab_x += 110;
+                }
+                w_tab = w_tab->next;
+            }
+            last_buttons = buttons;
+            return;
+        }
+
+        // 3. Masaüstü Simgelerine mi tıklandı? (Sol taraf: x < 100, y < 568)
         if (x < 100) {
-            if (y >= 40 && y <= 90) {
+            if (y >= 30 && y <= 80) {
                 window_t *w = gui_create_window("UI Test Paneli", 200, 150, 400, 250, 0x00F39C12);
                 gui_create_label(w, 20, 40, "Merhaba ScratchOS GUI!", 0x002F3542);
                 gui_create_button(w, 20, 80, 120, 30, "Tikla Bana", test_btn_click);
             }
-            else if (y >= 110 && y <= 160) {
+            else if (y >= 95 && y <= 145) {
                 if (!term_window || !term_window->active) {
-                    term_window = gui_create_window("Terminal", 100, 100, 520, 360, 0x00000000);
+                    term_window = gui_create_window("Terminal", 100, 80, 520, 360, 0x00000000);
                     gui_term_init(term_window);
                 } else {
-                    gui_bring_to_front(term_window);
+                    gui_restore_window(term_window);
                 }
             }
-            else if (y >= 180 && y <= 230) {
+            else if (y >= 160 && y <= 210) {
                 if (!fm_window || !fm_window->active) {
-                    fm_window = gui_create_window("Dosya Yoneticisi", 180, 100, 480, 340, 0x003498DB);
+                    fm_window = gui_create_window("Dosya Yoneticisi", 180, 80, 480, 340, 0x003498DB);
                     gui_fm_init(fm_window);
                 } else {
-                    gui_bring_to_front(fm_window);
+                    gui_restore_window(fm_window);
                 }
             }
-            else if (y >= 320 && y <= 370) {
+            else if (y >= 225 && y <= 275) {
+                if (!net_window || !net_window->active) {
+                    net_window = gui_create_window("Ag Durumu", 240, 130, 400, 240, 0x002ED573);
+                    gui_net_init(net_window);
+                } else {
+                    gui_restore_window(net_window);
+                }
+            }
+            else if (y >= 290 && y <= 340) {
                 if (!notepad_window || !notepad_window->active) {
-                    notepad_window = gui_create_window("Not Defteri", 220, 140, 480, 360, 0x008E44AD);
+                    notepad_window = gui_create_window("Not Defteri", 220, 100, 480, 360, 0x008E44AD);
                     gui_notepad_init(notepad_window, "/not.txt");
                 } else {
-                    gui_bring_to_front(notepad_window);
+                    gui_restore_window(notepad_window);
+                }
+            }
+            else if (y >= 355 && y <= 405) {
+                if (!calc_window || !calc_window->active) {
+                    calc_window = gui_create_window("Hesap Makinesi", 260, 100, 240, 290, 0x00E67E22);
+                    gui_calc_init(calc_window);
+                } else {
+                    gui_restore_window(calc_window);
+                }
+            }
+            else if (y >= 420 && y <= 470) {
+                if (!sysinfo_window || !sysinfo_window->active) {
+                    sysinfo_window = gui_create_window("Sistem Bilgisi", 200, 120, 420, 260, 0x0016A085);
+                    gui_sysinfo_init(sysinfo_window);
+                } else {
+                    gui_restore_window(sysinfo_window);
                 }
             }
         }
 
-        // 2. Pencerelere mi tiklandi? (En öndekinden ara)
+        // 4. Pencerelere mi tıklandı? (En öndekinden ara)
         window_t *curr = window_list_tail;
         while (curr) {
-            if (x >= curr->x && x <= curr->x + curr->w &&
+            if (!curr->minimized && curr->active &&
+                x >= curr->x && x <= curr->x + curr->w &&
                 y >= curr->y && y <= curr->y + curr->h) {
                 
-                // Kapatma butonu...
+                // Kapatma butonu (Kırmızı 'x': x + w - 20 .. x + w - 5, y + 5 .. y + 20)
                 if (x >= curr->x + curr->w - 20 && x <= curr->x + curr->w - 5 &&
                     y >= curr->y + 5 && y <= curr->y + 20) {
                     gui_destroy_window(curr);
                     break;
                 }
 
+                // Minimize butonu (Turuncu '-': x + w - 38 .. x + w - 23, y + 5 .. y + 20)
+                if (x >= curr->x + curr->w - 38 && x <= curr->x + curr->w - 23 &&
+                    y >= curr->y + 5 && y <= curr->y + 20) {
+                    gui_minimize_window(curr);
+                    break;
+                }
+
                 gui_bring_to_front(curr);
                 
-                // Drag...
+                // Başlık çubuğundan sürükleme (Drag)
                 if (y <= curr->y + 25) {
                     dragged_window = curr;
                     drag_off_x = x - curr->x;
@@ -603,6 +897,10 @@ void gui_on_mouse_event(int x, int y, int buttons, int scroll) {
                     int rel_x = x - curr->x;
                     int rel_y = y - curr->y;
                     gui_notepad_on_click(rel_x, rel_y);
+                } else if (curr == calc_window) {
+                    int rel_x = x - curr->x;
+                    int rel_y = y - curr->y;
+                    gui_calc_on_click(rel_x, rel_y);
                 } else {
                     // Widget click check
                     gui_widget_t *w = curr->widgets_head;
@@ -629,6 +927,8 @@ void gui_on_mouse_event(int x, int y, int buttons, int scroll) {
     if (dragged_window && (buttons & 1)) {
         dragged_window->x = x - drag_off_x;
         dragged_window->y = y - drag_off_y;
+        if (dragged_window->y < 0) dragged_window->y = 0;
+        if (dragged_window->y > 568 - 30) dragged_window->y = 568 - 30; // Taskbar'a taşmasın
     }
 
     last_buttons = buttons;
@@ -787,7 +1087,7 @@ void gui_draw_icon(int x, int y, char* label, unsigned int color) {
 }
 
 void gui_draw_window(window_t* win) {
-    if (!win->active) return;
+    if (!win->active || win->minimized) return;
 
     int is_terminal = (strcmp(win->title, "Terminal") == 0);
 
@@ -805,8 +1105,13 @@ void gui_draw_window(window_t* win) {
         vbe_write_at(win->x + 10, win->y + 5, win->title, 0x002F3542);
     }
     
-    // 3. Kapatma Butonu (Sağ üstte SkyOS tarzi)
+    // 2. Minimize Butonu (Turuncu '-')
+    vbe_draw_rect(win->x + win->w - 38, win->y + 5, 15, 15, 0x00FFA502);
+    vbe_draw_rect(win->x + win->w - 35, win->y + 13, 9, 2, 0x00FFFFFF);
+
+    // 3. Kapatma Butonu (Kırmızı 'x')
     vbe_draw_rect(win->x + win->w - 20, win->y + 5, 15, 15, 0x00FF4757);
+    vbe_draw_rect(win->x + win->w - 17, win->y + 8, 9, 9, 0x00FF4757);
     
     // 4. Kenarlıklar (Soft Blue/Gray veya Koyu Kenarlık)
     unsigned int border_color = is_terminal ? 0x0034495E : 0x002F3542;
@@ -1050,6 +1355,141 @@ void gui_draw_window(window_t* win) {
         return; // Notepad çizildi
     }
 
+    int is_sysinfo = (strcmp(win->title, "Sistem Bilgisi") == 0);
+    if (is_sysinfo) {
+        int ix = win->x + 12;
+        int iy = win->y + 35;
+        
+        vbe_write_at(ix, iy, "ScratchOS v0.2 [x86 Monolithic Kernel]", 0x002C3E50);
+        iy += 22;
+
+        // Uptime
+        unsigned int sec = timer_get_seconds();
+        int uph = sec / 3600;
+        int upm = (sec % 3600) / 60;
+        int ups = sec % 60;
+        char up_buf[48];
+        char num[16];
+        strcpy(up_buf, "Uptime: ");
+        calc_int_to_str(uph, num); fm_strcat(up_buf, num); fm_strcat(up_buf, "h ");
+        calc_int_to_str(upm, num); fm_strcat(up_buf, num); fm_strcat(up_buf, "m ");
+        calc_int_to_str(ups, num); fm_strcat(up_buf, num); fm_strcat(up_buf, "s");
+        vbe_write_at(ix, iy, up_buf, 0x0034495E);
+        iy += 24;
+
+        // Bellek (PMM)
+        unsigned int total_mb = pmm_total_memory_kb() / 1024;
+        unsigned int used_frames = pmm_used_frames();
+        unsigned int total_frames = pmm_total_frames();
+        unsigned int used_mb = (used_frames * 4) / 1024;
+
+        char mem_buf[64];
+        strcpy(mem_buf, "RAM Kullanimi: ");
+        calc_int_to_str(used_mb, num); fm_strcat(mem_buf, num); fm_strcat(mem_buf, " MB / ");
+        calc_int_to_str(total_mb, num); fm_strcat(mem_buf, num); fm_strcat(mem_buf, " MB");
+        vbe_write_at(ix, iy, mem_buf, 0x002C3E50);
+        iy += 18;
+
+        // RAM Progress Bar
+        int bar_w = win->w - 24;
+        vbe_draw_rect(ix, iy, bar_w, 14, 0x00BDC3C7);
+        if (total_frames > 0) {
+            int fill_w = (used_frames * bar_w) / total_frames;
+            if (fill_w > bar_w) fill_w = bar_w;
+            if (fill_w > 0) vbe_draw_rect(ix, iy, fill_w, 14, 0x002ED573);
+        }
+        iy += 25;
+
+        // Dosya Sistemi
+        vbe_write_at(ix, iy, "Dosya Sistemi: LAFS + Ext2 surucusu", 0x002C3E50);
+        iy += 20;
+        vbe_write_at(ix, iy, "Gorev Yoneticisi: Preemptive Multitasking", 0x002C3E50);
+        iy += 20;
+        vbe_write_at(ix, iy, "Grafik: VBE 800x600 32bpp TrueColor", 0x002C3E50);
+        return;
+    }
+
+    int is_net = (strcmp(win->title, "Ag Durumu") == 0);
+    if (is_net) {
+        int ix = win->x + 12;
+        int iy = win->y + 35;
+
+        vbe_write_at(ix, iy, "Ag Baglantisi ve Donanim Durumu", 0x002C3E50);
+        iy += 24;
+
+        uint32_t ip = net_get_ip();
+        char ip_str[64] = "IP Adresi: ";
+        if (ip == 0) {
+            fm_strcat(ip_str, "Bagli degil (0.0.0.0)");
+        } else {
+            char part[8];
+            calc_int_to_str(ip & 0xFF, part); fm_strcat(ip_str, part); fm_strcat(ip_str, ".");
+            calc_int_to_str((ip >> 8) & 0xFF, part); fm_strcat(ip_str, part); fm_strcat(ip_str, ".");
+            calc_int_to_str((ip >> 16) & 0xFF, part); fm_strcat(ip_str, part); fm_strcat(ip_str, ".");
+            calc_int_to_str((ip >> 24) & 0xFF, part); fm_strcat(ip_str, part);
+        }
+        vbe_write_at(ix, iy, ip_str, 0x001B9CFC);
+        iy += 22;
+
+        vbe_write_at(ix, iy, "Varsayilan Ag Gecidi: 10.0.2.2", 0x0034495E);
+        iy += 20;
+        vbe_write_at(ix, iy, "DNS Sunucusu: 10.0.2.3", 0x0034495E);
+        iy += 20;
+        vbe_write_at(ix, iy, "Ag Bagdastirici: RTL8139 / E1000", 0x002ED573);
+        iy += 20;
+        vbe_write_at(ix, iy, "Protokoller: IPv4, ARP, ICMP, UDP, TCP", 0x002C3E50);
+        return;
+    }
+
+    int is_calc = (strcmp(win->title, "Hesap Makinesi") == 0);
+    if (is_calc) {
+        // Ekran alani: win->x + 10, win->y + 35, win->w - 20, 36
+        int dx = win->x + 10;
+        int dy = win->y + 35;
+        int dw = win->w - 20;
+        vbe_draw_rect(dx, dy, dw, 36, 0x002C3E50);
+        vbe_draw_rect(dx, dy, dw, 1, 0x001A252F);
+        vbe_draw_rect(dx, dy + 35, dw, 1, 0x001A252F);
+
+        // Ekran metnini sağa hizalı çiz
+        int disp_len = strlen(calc_display);
+        int tx = dx + dw - (disp_len * 8) - 10;
+        if (tx < dx + 6) tx = dx + 6;
+        vbe_write_at(tx, dy + 10, calc_display, 0x002ED573); // Yeşil fosfor yazı
+
+        // 4x4 Buton Gridi: rel_y 80-260, rel_x 10-230
+        const char *btn_labels[4][4] = {
+            {"7", "8", "9", "/"},
+            {"4", "5", "6", "*"},
+            {"1", "2", "3", "-"},
+            {"C", "0", "=", "+"}
+        };
+        for (int r = 0; r < 4; r++) {
+            for (int c = 0; c < 4; c++) {
+                int bx = win->x + 10 + c * 55;
+                int by = win->y + 80 + r * 45;
+                unsigned int bg = 0x00DFE4EA;
+                unsigned int fg = 0x002F3542;
+                if (c == 3) {
+                    bg = 0x00FFA502; // Turuncu işlem butonları
+                    fg = 0x00FFFFFF;
+                } else if (r == 3 && c == 0) {
+                    bg = 0x00FF4757; // Kırmızı C butonu
+                    fg = 0x00FFFFFF;
+                } else if (r == 3 && c == 2) {
+                    bg = 0x002ED573; // Yeşil = butonu
+                    fg = 0x00FFFFFF;
+                }
+                vbe_draw_rect(bx, by, 50, 40, bg);
+                vbe_draw_rect(bx, by, 50, 1, 0x00FFFFFF);
+                vbe_draw_rect(bx, by + 39, 50, 1, 0x00718093);
+                vbe_draw_rect(bx + 49, by, 1, 40, 0x00718093);
+                vbe_write_at(bx + 21, by + 12, (char*)btn_labels[r][c], fg);
+            }
+        }
+        return;
+    }
+
     // 6. Widget'ları Çiz
     gui_widget_t *w = win->widgets_head;
     while (w) {
@@ -1099,18 +1539,20 @@ void gui_draw_window(window_t* win) {
 
 void gui_render() {
     // 1. SkyOS Tarzi Arka Plan (Mavi Gradyan)
-    for (int y = 0; y < 600; y++) {
+    for (int y = 0; y < 568; y++) {
         unsigned char b = 180 + (y * 70) / 600;
         unsigned char g = 120 + (y * 40) / 600;
         vbe_draw_rect(0, y, 800, 1, (g << 8) | b);
     }
     
     // 2. Masaüstü Simgeleri (Sol Taraf)
-    gui_draw_icon(20, 40, "Storage", 0x00ffa502);
-    gui_draw_icon(20, 110, "Terminal", 0x002f3542);
-    gui_draw_icon(20, 180, "Files", 0x001e90ff);
-    gui_draw_icon(20, 250, "Network", 0x002ed573);
-    gui_draw_icon(20, 320, "Notepad", 0x008e44ad);
+    gui_draw_icon(20, 30,  "Storage",  0x00ffa502);
+    gui_draw_icon(20, 95,  "Terminal", 0x002f3542);
+    gui_draw_icon(20, 160, "Files",    0x001e90ff);
+    gui_draw_icon(20, 225, "Network",  0x002ed573);
+    gui_draw_icon(20, 290, "Notepad",  0x008e44ad);
+    gui_draw_icon(20, 355, "Calc",     0x00e67e22);
+    gui_draw_icon(20, 420, "SysInfo",  0x0016a085);
     
     // 3. Pencereleri Çiz (Arkadan Öne)
     window_t *curr = window_list_head;
@@ -1120,21 +1562,92 @@ void gui_render() {
         }
         curr = curr->next;
     }
-    
-    // 4. SkyOS Üst Panel (Top Bar) - Ortalanmış ve şık
-    vbe_draw_rect(300, 0, 200, 30, 0x00DCDDE1); // Panel gövdesi
-    vbe_draw_rect(300, 30, 200, 1, 0x007F8C8D);  // Alt çizgi
-    
-    // Panel İçindeki Saat (Gercek Zamanli)
-    int h, m, s;
-    extern void rtc_get_time(int *h, int *m, int *s);
-    rtc_get_time(&h, &m, &s);
 
+    // 4. Alt Görev Çubuğu (Taskbar) - y=568..600 (32px)
+    vbe_draw_rect(0, 568, 800, 32, 0x001E293B); // Koyu lacivert/gri panel
+    vbe_draw_rect(0, 568, 800, 1, 0x00334155);  // Üst kenarlık vurgusu
+
+    // [ScratchOS] Başlat Butonu (x=4, y=572, w=95, h=24)
+    unsigned int start_bg = start_menu_open ? 0x002563EB : 0x003B82F6;
+    vbe_draw_rect(4, 572, 95, 24, start_bg);
+    vbe_draw_rect(4, 572, 95, 1, 0x0060A5FA);
+    vbe_draw_rect(4, 595, 95, 1, 0x001D4ED8);
+    vbe_write_at(12, 576, "ScratchOS", 0x00FFFFFF);
+
+    // Açık Pencerelerin Sekmeleri (Taskbar Tabs)
+    int tab_x = 105;
+    curr = window_list_head;
+    while (curr && tab_x < 580) {
+        if (curr->active) {
+            int is_active = (curr == window_list_tail && !curr->minimized);
+            unsigned int tab_bg = is_active ? 0x00475569 : (curr->minimized ? 0x000F172A : 0x00334155);
+            vbe_draw_rect(tab_x, 572, 105, 24, tab_bg);
+            vbe_draw_rect(tab_x, 572, 105, 1, is_active ? 0x0094A3B8 : 0x00475569);
+            vbe_draw_rect(tab_x, 595, 105, 1, 0x000F172A);
+
+            // Başlığın ilk 11 karakterini sekmeye yaz
+            char tab_title[13];
+            fm_strncpy(tab_title, curr->title, 12);
+            vbe_write_at(tab_x + 6, 576, tab_title, is_active ? 0x0038BDF8 : (curr->minimized ? 0x0094A3B8 : 0x00E2E8F0));
+            tab_x += 110;
+        }
+        curr = curr->next;
+    }
+
+    // Sağ Bölüm: RAM Göstergesi ve RTC Saati
+    // RAM bilgisi (x=600..710)
+    unsigned int total_mb = pmm_total_memory_kb() / 1024;
+    unsigned int used_mb = (pmm_used_frames() * 4) / 1024;
+    char ram_txt[32];
+    char rnum[16];
+    strcpy(ram_txt, "RAM: ");
+    calc_int_to_str(used_mb, rnum); fm_strcat(ram_txt, rnum); fm_strcat(ram_txt, "/");
+    calc_int_to_str(total_mb, rnum); fm_strcat(ram_txt, rnum); fm_strcat(ram_txt, "M");
+    vbe_write_at(605, 576, ram_txt, 0x00A5B4FC);
+
+    // Ayırıcı çizgi
+    vbe_draw_rect(715, 572, 1, 24, 0x00475569);
+
+    // RTC Saati (x=725..795)
+    int h, m, s;
+    rtc_get_time(&h, &m, &s);
     char time_str[16];
-    // Basit itoa/format mantigi (kprintf olmadigi icin manuel)
     time_str[0] = (h / 10) + '0'; time_str[1] = (h % 10) + '0'; time_str[2] = ':';
     time_str[3] = (m / 10) + '0'; time_str[4] = (m % 10) + '0'; time_str[5] = ':';
     time_str[6] = (s / 10) + '0'; time_str[7] = (s % 10) + '0'; time_str[8] = '\0';
-    
-    vbe_write_at(360, 8, time_str, 0x002F3640);
+    vbe_write_at(728, 576, time_str, 0x0038BDF8);
+
+    // 5. Başlat Menüsü Açık ise Çiz (Start Menu Popup: x=4, y=320, w=170, h=248)
+    if (start_menu_open) {
+        // Gölge
+        vbe_draw_rect(7, 323, 170, 248, 0x000F172A);
+        // Menü Gövdesi
+        vbe_draw_rect(4, 320, 170, 248, 0x001E293B);
+        vbe_draw_rect(4, 320, 170, 1, 0x0064748B);
+        vbe_draw_rect(4, 567, 170, 1, 0x000F172A);
+        vbe_draw_rect(4, 320, 1, 248, 0x0064748B);
+        vbe_draw_rect(173, 320, 1, 248, 0x000F172A);
+
+        // Menü Başlığı
+        vbe_draw_rect(5, 321, 168, 26, 0x000F172A);
+        vbe_write_at(12, 326, "ScratchOS v0.2", 0x0038BDF8);
+
+        // Menü Öğeleri (8 adet, her biri ~26px)
+        const char *menu_items[] = {
+            "1. Terminal",
+            "2. Dosya Yoneticisi",
+            "3. Not Defteri",
+            "4. Sistem Bilgisi",
+            "5. Ag Durumu",
+            "6. Hesap Makinesi",
+            "7. Yeniden Baslat",
+            "8. Sistemi Kapat"
+        };
+        for (int i = 0; i < 8; i++) {
+            int iy = 350 + i * 27;
+            vbe_draw_rect(5, iy, 168, 26, (i % 2 == 1) ? 0x001E293B : 0x00243248);
+            unsigned int text_col = (i == 6) ? 0x00FBBF24 : ((i == 7) ? 0x00F87171 : 0x00E2E8F0);
+            vbe_write_at(12, iy + 6, (char*)menu_items[i], text_col);
+        }
+    }
 }

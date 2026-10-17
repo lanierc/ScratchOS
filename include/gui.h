@@ -42,6 +42,7 @@ typedef struct window {
     int active;
     int focus;
     int is_dragging;
+    int minimized;
     
     gui_widget_t *widgets_head;
     gui_widget_t *widgets_tail;
@@ -57,6 +58,9 @@ void gui_render();
 void gui_on_mouse_event(int x, int y, int buttons, int scroll);
 void gui_on_key_event(char c);
 window_t* gui_create_window(char* title, int x, int y, int w, int h, unsigned int color);
+void gui_destroy_window(window_t *win);
+void gui_minimize_window(window_t *win);
+void gui_restore_window(window_t *win);
 gui_widget_t* gui_create_button(window_t* win, int x, int y, int w, int h, char* text, void (*on_click)(gui_widget_t*));
 gui_widget_t* gui_create_label(window_t* win, int x, int y, char* text, unsigned int color);
 
@@ -75,5 +79,11 @@ void gui_notepad_on_key(char c);
 void gui_notepad_on_click(int rel_x, int rel_y);
 void gui_notepad_save(void);
 void gui_notepad_clear(void);
+
+void gui_sysinfo_init(window_t *win);
+void gui_net_init(window_t *win);
+void gui_calc_init(window_t *win);
+void gui_calc_on_click(int rel_x, int rel_y);
+void gui_toggle_start_menu(void);
 
 #endif
